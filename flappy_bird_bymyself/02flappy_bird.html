@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>flappy_bird</title>
+    <style>
+        canvas {
+            border:1px solid red;
+        }
+        img {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="cvs" width="500" height="500"></canvas>
+    <script src="./js/util.js"></script>
+    <script src="./js/bird.js"></script>
+    <script src="./js/land.js"></script>
+    <script src="./js/pipe.js"></script>
+    <script src="./js/sky.js"></script>
+    <script>
+        var cvs = document.querySelector( '#cvs' );
+        var ctx = cvs.getContext( '2d' );
+        util.loadImage({
+            bird:'./img/bird.png',
+            land:'./img/land.png',
+            pipedown:'./img/pipeDown.png',
+            pipeup:'./img/pipeup.png',
+            sky:'./img/sky.png'
+        },function (imgobj) {
+            cvs.width=imgobj.sky.width;
+            cvs.height=imgobj.sky.height;
+            var roles=[];
+
+            //背景2个
+            roles.push(getSky(ctx,imgobj.sky,3));
+            roles.push(getSky(ctx,imgobj.sky,3));
+            //管道5个
+            for(var i=0;i<6;i++)
+            {
+                roles.push(getPipe(ctx,imgobj.pipedown,imgobj.pipeup,50,112,3));
+            }
+
+            //大地4个
+            for(var i=0;i<4;i++)
+            {
+                roles.push(getLand(ctx,imgobj.land,3));
+            }
+            //一只鸟
+            roles.push(getBird(ctx,imgobj.bird,3,1,10,10));
+            var timer=setInterval(function () {
+
+                /*
+                 * 每次绘制新的游戏画面时，
+                 * 先判断小鸟有没有碰撞，
+                 * 如果碰撞暂停定时器。
+                 * */
+                var bird = getBird();
+                var birdCoreX = bird.x + bird.width / 2;
+                var birdCoreY = bird.y + bird.height / 2;
+
+                // 如果小鸟撞向管道，或者飞出天空，或者duang~duang~duang，那么游戏结束
+                //判断小鸟的中心点是否在管道路劲中;
+                if ( ctx.isPointInPath( birdCoreX, birdCoreY )
+                        || birdCoreY < 0
+                        || birdCoreY > (ctx.canvas.height - imgobj.land.height) )
+                {
+                    clearInterval( timer );
+                    ctx.fillStyle = 'rgba( 100, 100, 100, 0.8 )';
+                    ctx.fillRect( 0, 0, ctx.canvas.width, ctx.canvas.height );
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = 'red';
+                    ctx.font = '900 40px 微软雅黑';
+                    ctx.fillText( 'GAME OVER!!!', ctx.canvas.width / 2, ctx.canvas.height / 2 );
+                    return;
+                }
+
+
+                ctx.beginPath();
+                //让land动起来
+               roles.forEach(function (role) {
+//                   console.log(land.x);
+                   role.draw();
+                   role.update();
+               })
+//                console.log('i  am in circle');
+            },50)
+
+        })
+
+    </script>
+</body>
+</html>
